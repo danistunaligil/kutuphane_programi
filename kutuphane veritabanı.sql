@@ -26,7 +26,10 @@ CREATE TABLE IF NOT EXISTS `kitaplar` (
   `yayinevi` varchar(100) NOT NULL DEFAULT '0',
   `adet` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `barkod` (`barkod`)
+  UNIQUE KEY `barkod` (`barkod`),
+  KEY `adi` (`adi`),
+  KEY `yazari` (`yazari`),
+  KEY `yayinevi` (`yayinevi`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 -- kutuphane.kitaplar: ~2 rows (yaklaşık) tablosu için veriler indiriliyor
@@ -35,6 +38,24 @@ INSERT INTO `kitaplar` (`id`, `barkod`, `adi`, `yazari`, `yayinevi`, `adet`) VAL
 	(1, '1111111111111', 'Don kişot', 'cervantes', 'hakan yayınevi', 5),
 	(2, '2222222222222', 'mor salkımlı ev', 'halide edip adıvar', 'bilmemne yayınevi', 3);
 /*!40000 ALTER TABLE `kitaplar` ENABLE KEYS */;
+
+-- tablo yapısı dökülüyor kutuphane.odunc
+CREATE TABLE IF NOT EXISTS `odunc` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kitap_id` int(11) NOT NULL DEFAULT '0',
+  `uye_id` int(11) NOT NULL DEFAULT '0',
+  `verilis_tarihi` date NOT NULL DEFAULT '0000-00-00',
+  `getilecek_tarih` date NOT NULL DEFAULT '0000-00-00',
+  PRIMARY KEY (`id`),
+  KEY `verilis_tarihi` (`verilis_tarihi`),
+  KEY `getilecek_tarih` (`getilecek_tarih`),
+  KEY `kitap_id` (`kitap_id`),
+  KEY `uye_id` (`uye_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- kutuphane.odunc: ~0 rows (yaklaşık) tablosu için veriler indiriliyor
+/*!40000 ALTER TABLE `odunc` DISABLE KEYS */;
+/*!40000 ALTER TABLE `odunc` ENABLE KEYS */;
 
 -- tablo yapısı dökülüyor kutuphane.users
 CREATE TABLE IF NOT EXISTS `users` (
@@ -51,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 INSERT INTO `users` (`id`, `adi`, `password`, `su`) VALUES
 	(5, 'Ayça', 'zKcBnXs2bis=', 1),
 	(6, 'Admin', 'HACWG13z8e8=', 1),
-	(7, 'Emir', '4Q+fxyyVTFk=', 0),
+	(7, 'Emir', 'HACWG13z8e8=', 0),
 	(8, 'Emir Kaya', '4Q+fxyyVTFk=', 0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
@@ -65,7 +86,9 @@ CREATE TABLE IF NOT EXISTS `uyeler` (
   `telefon` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `e_posta` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `tc` (`tc`)
+  UNIQUE KEY `tc` (`tc`),
+  KEY `soyad` (`soyad`),
+  KEY `ad` (`ad`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 
 -- kutuphane.uyeler: ~7 rows (yaklaşık) tablosu için veriler indiriliyor
