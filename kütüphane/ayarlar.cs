@@ -24,9 +24,6 @@ namespace kütüphane
         MySqlConnection con = new MySqlConnection("Server=127.0.0.1;Database=kutuphane;Uid=root;Pwd=12345678;");
         int kayit_id = -1;
 
-
-
-
         void listele()
         {
             listBox1.Items.Clear();
@@ -57,7 +54,7 @@ namespace kütüphane
                 bYeni.Visible = bDüzenle.Visible = bSil.Visible = toolStripSeparator1.Visible = cYetki.Visible = false;
 
             }
-
+            kayit_id = kullanıcılar_Sınıfı.secilen.id;
             textBox1.Text = kullanıcılar_Sınıfı.secilen.ad;
             maskedTextBox1.Text = kullanıcılar_Sınıfı.secilen.şifre;
             maskedTextBox1.PasswordChar = '*';

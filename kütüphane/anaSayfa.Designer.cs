@@ -94,7 +94,6 @@
             this.Controls.Add(this.toolStrip1);
             this.Name = "anaSayfa";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "anaSayfa";
             this.Load += new System.EventHandler(this.anaSayfa_Load);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
