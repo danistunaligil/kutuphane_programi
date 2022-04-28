@@ -28,7 +28,7 @@ namespace kütüphane
             //this.Text = "Ana Sayfa "+ (kullanıcılar_Sınıfı.secilen.yetki == yetki_tipi.Yönetici ? "Yetkili kullanıcı" : "Standart Kullanıcı");
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             Version version = assembly.GetName().Version;
-            this.Text = String.Format("Kütüphane Programı {0}.{1}",version.Major,version.Minor);
+            this.Text = String.Format("Kütüphane Programı {0}.{1}", version.Major, version.Minor);
             con.Open();
             tsbHangiKayıtlar.SelectedIndex = 0;
             oduncVerilenleriGetir();
@@ -49,9 +49,9 @@ namespace kütüphane
             new ayarlar().ShowDialog();
         }
 
-        enum görüntüleme_tipi { süresiGeçenler=1,iadesiYaklaşanlar=3,bugünGelecekler=2,tümü=0}
+        enum görüntüleme_tipi { süresiGeçenler = 1, iadesiYaklaşanlar = 3, bugünGelecekler = 2, tümü = 0 }
 
-        void oduncVerilenleriGetir(görüntüleme_tipi hangiKayıtlar=görüntüleme_tipi.tümü)
+        void oduncVerilenleriGetir(görüntüleme_tipi hangiKayıtlar = görüntüleme_tipi.tümü)
         {
 
             string şartifadesi = "";
@@ -78,7 +78,7 @@ namespace kütüphane
 
         private void tsbHangiKayıtlar_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private void tsbHangiKayıtlar_SelectedIndexChanged(object sender, EventArgs e)
@@ -92,9 +92,104 @@ namespace kütüphane
             dataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = durum == 3 ? Color.LightYellow : (durum == 2 ? Color.Tomato : (durum == 1 ? Color.LightGray : Color.White));
         }
 
-        private void dataGridView1_ColumnSortModeChanged(object sender, DataGridViewColumnEventArgs e)
+        void kontrol()
         {
-            
+            MySqlCommand cmd = new MySqlCommand(String.Format("select odunc.id from (odunc inner join kitaplar on odunc.kitap_id=kitaplar.id) inner join uyeler on odunc.uye_id=uyeler.id where kitaplar.barkod='{0}' and uyeler.tc='{1}'", textBox2.Text.Trim(), textBox1.Text.Trim()), con);
+            MySqlDataReader dr = cmd.ExecuteReader();
+            if (dr.Read())
+            {
+                int id = dr.GetInt32(0);
+                dr.Close();
+                //Kitabı iade edecek
+                cmd.CommandText = "delete from odunc where id=" + id.ToString();
+                cmd.ExecuteNonQuery();
+                oduncVerilenleriGetir();
+                MessageBox.Show("İade işlemi yapıldı.");
+            }
+            else
+            {
+                dr.Close();
+                int üye_id = -1;
+                int kitap_id = -1;
+                cmd.CommandText = String.Format("select id from uyeler where tc='{0}'", textBox1.Text.Trim());
+                dr = cmd.ExecuteReader();
+                if (dr.Read()) üye_id = dr.GetInt32(0);
+                dr.Close();
+                if (üye_id == -1)
+                {
+                    if (DialogResult.Cancel == MessageBox.Show("Bu üye kayıtlı değil. Üye kayıt sayfasına yönlendiriliyorsunuz.", "Üye eklenmesi gerekli", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return;
+                    button1_Click("ödünç", new EventArgs());
+                    return;
+                }
+
+                cmd.CommandText = String.Format("select id from kitaplar where barkod='{0}'", textBox2.Text.Trim());
+                dr = cmd.ExecuteReader();
+                if (dr.Read()) kitap_id = dr.GetInt32(0);
+                dr.Close();
+                if (kitap_id == -1)
+                {
+                    if (DialogResult.Cancel == MessageBox.Show("Bu kitap kayıtlı değil. Kitap kayıt sayfasına yönlendiriliyorsunuz.", "Kitap eklenmesi gerekli", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return;
+                    button2_Click("ödünç", new EventArgs());
+                    return;
+                }
+
+                cmd.CommandText = String.Format("select count(*) from odunc inner join kitaplar on odunc.kitap_id=kitaplar.id where kitaplar.barkod='{0}'", textBox2.Text.Trim());
+                dr = cmd.ExecuteReader();
+                if (dr.Read())
+                {
+                    int ödünçVerilenAdet = dr.GetInt32(0);
+                    dr.Close();
+                    cmd.CommandText = String.Format("select kitaplar.adet from kitaplar where kitaplar.barkod='{0}'", textBox2.Text.Trim());
+                    int kitapAdeti = 0;
+                    dr = cmd.ExecuteReader();
+                    if (dr.Read())
+                    {
+                        kitapAdeti = dr.GetInt32(0);
+                    }
+                    dr.Close();
+                    if (ödünçVerilenAdet >= kitapAdeti)
+                    {
+                        //hata ver ve çık
+                        MessageBox.Show("Bu kitap adetinden fazla ödünç verilemez.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+                else dr.Close();
+
+
+
+                cmd.CommandText = String.Format("insert into odunc(uye_id,kitap_id,verilis_tarihi,getirilecek_tarih) values({0},{1},'{2}','{3}')", üye_id, kitap_id, DateTime.Today.ToString("yyyy.MM.dd"), DateTime.Today.AddDays(7).ToString("yyyy.MM.dd"));
+                cmd.ExecuteNonQuery();
+                oduncVerilenleriGetir();
+                MessageBox.Show("Ödünç verme işlemi yapıldı.");
+                //Kitabı ödünç almak istiyor demektir.
+                //Kitabın odunc tablosundaki adeti getirilecek
+
+            }
+
+        }
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+                if (textBox2.Text.Trim() == "")
+                {
+                    textBox2.Focus();
+                    textBox2.Text = "";
+                }
+                else kontrol();
+        }
+
+        private void textBox2_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+                if (textBox1.Text.Trim() == "")
+                {
+                    textBox1.Text = "";
+                    textBox1.Focus();
+                }
+                else kontrol();
+
         }
     }
 }
