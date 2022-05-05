@@ -18,10 +18,9 @@ namespace kütüphane
             InitializeComponent();
         }
 
-                
         MySqlConnection con = new MySqlConnection("Server=127.0.0.1;Database=kutuphane;Uid=root;Pwd=12345678;");
-        int kayit_id = -1;
-
+        public int kayit_id = -1;
+        public string tc = "";
 
         void datagrid_seç(string tc)
         {
@@ -65,6 +64,7 @@ namespace kütüphane
                 con.Open();
                 üyeleriGetir();
                 dataGridView1.ClearSelection();
+                if (tc!="") toolStripButton1_Click("yenikayıt",new EventArgs());
             }
             catch (Exception hata)
             {
@@ -100,7 +100,9 @@ namespace kütüphane
 
         private void toolStripButton1_Click(object sender, EventArgs e) //Yeni
         {
-            maskedTextBox1.Text = maskedTextBox2.Text = textBox1.Text = textBox2.Text = textBox3.Text = "";
+            maskedTextBox2.Text = textBox1.Text = textBox2.Text = textBox3.Text = "";
+            maskedTextBox1.Text = tc;
+            if (tc!="") maskedTextBox2.Focus();else maskedTextBox1.Focus();
             düzenleme_aktif_pasif(true);
             kayit_id = -1;
 
@@ -130,6 +132,20 @@ namespace kütüphane
                 else cinsiyet = "Erkek";
                 MySqlCommand cmd = new MySqlCommand(String.Format("insert into uyeler(tc,ad,soyad,cinsiyet,telefon,e_posta) values('{0}','{1}','{2}','{3}','{4}','{5}')",maskedTextBox1.Text,textBox1.Text,textBox2.Text,cinsiyet,maskedTextBox2.Text,textBox3.Text), con);
                 cmd.ExecuteNonQuery();
+
+                if (tc != "") //bu form tek kayıt için açılmış demektir.
+                              // 1. tc ye göre sorgu yazılıp id numarası getirilecek.
+                              // 2. form ok ile kapatılacak
+                {
+                    cmd = new MySqlCommand(String.Format("select id from uyeler where tc='{0}'", maskedTextBox1.Text.Trim()), con);
+                    MySqlDataReader dr = cmd.ExecuteReader();
+                    if (dr.Read())
+                    {
+                        kayit_id = dr.GetInt32(0);
+                        dr.Close();
+                        this.DialogResult = DialogResult.OK;
+                    }
+                }
                 üyeleriGetir();
                 return true;
             }
@@ -167,8 +183,15 @@ namespace kütüphane
 
         private void d_iptal_Click(object sender, EventArgs e)
         {
-            seçiliOlanıYansıt(dataGridView1.SelectedRows[0].Index);
-            düzenleme_aktif_pasif(false);
+            if (tc != "")
+            {
+                this.DialogResult = DialogResult.Cancel; //tek kayıt için açılan pencerede iptal düğmesine basınca formı CANCEL ile kapat.
+            }
+            else
+            {
+                seçiliOlanıYansıt(dataGridView1.SelectedRows[0].Index);
+                düzenleme_aktif_pasif(false);
+            }
         }
 
         private void d_kaydet_Click(object sender, EventArgs e)//kaydet düğmesi
@@ -178,6 +201,9 @@ namespace kütüphane
             else sonuç= güncelle();
             if (sonuç)
             {
+               
+
+
                 düzenleme_aktif_pasif(false);
                 datagrid_seç(maskedTextBox1.Text);
             }

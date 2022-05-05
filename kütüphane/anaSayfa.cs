@@ -62,7 +62,7 @@ namespace kütüphane
             else if (hangiKayıtlar == görüntüleme_tipi.bugünGelecekler)
                 şartifadesi = "WHERE odunc.getilecek_tarih = CURDATE()";
 
-            MySqlDataAdapter da = new MySqlDataAdapter("SELECT odunc.id,kitaplar.barkod AS 'Barkod',kitaplar.adi AS 'Kitap Adı',kitaplar.yazari AS 'Kitabın Yazarı',uyeler.tc AS 'TC',uyeler.ad AS 'Öğrenci Adı',uyeler.soyad AS 'Öğrenci Soyadı',uyeler.telefon AS 'Öğrenci Telefon',uyeler.e_posta AS 'Öğrenci E-Posta',odunc.verilis_tarihi AS 'Veriliş Tarihi',odunc.getilecek_tarih AS 'Getirilecek Tarih', if(odunc.getilecek_tarih < CURDATE(),1,if(odunc.getilecek_tarih = CURDATE(),2,if(odunc.getilecek_tarih = CURDATE()+1 OR odunc.getilecek_tarih = CURDATE()+2,3,0))) AS durum FROM(odunc INNER JOIN kitaplar ON odunc.kitap_id = kitaplar.id) INNER JOIN uyeler ON odunc.uye_id = uyeler.id " + şartifadesi, con);
+            MySqlDataAdapter da = new MySqlDataAdapter("SELECT odunc.id,kitaplar.barkod AS 'Barkod',kitaplar.adi AS 'Kitap Adı',kitaplar.yazari AS 'Kitabın Yazarı',uyeler.tc AS 'TC',uyeler.ad AS 'Öğrenci Adı',uyeler.soyad AS 'Öğrenci Soyadı',uyeler.telefon AS 'Öğrenci Telefon',uyeler.e_posta AS 'Öğrenci E-Posta',odunc.verilis_tarihi AS 'Veriliş Tarihi',odunc.getirilecek_tarih AS 'Getirilecek Tarih', if(odunc.getirilecek_tarih < CURDATE(),1,if(odunc.getirilecek_tarih = CURDATE(),2,if(odunc.getirilecek_tarih = CURDATE()+1 OR odunc.getirilecek_tarih = CURDATE()+2,3,0))) AS durum FROM(odunc INNER JOIN kitaplar ON odunc.kitap_id = kitaplar.id) INNER JOIN uyeler ON odunc.uye_id = uyeler.id " + şartifadesi, con);
             DataTable dt = new DataTable();
             da.Fill(dt);
             dataGridView1.DataSource = dt;
@@ -96,7 +96,7 @@ namespace kütüphane
         {
             MySqlCommand cmd = new MySqlCommand(String.Format("select odunc.id from (odunc inner join kitaplar on odunc.kitap_id=kitaplar.id) inner join uyeler on odunc.uye_id=uyeler.id where kitaplar.barkod='{0}' and uyeler.tc='{1}'", textBox2.Text.Trim(), textBox1.Text.Trim()), con);
             MySqlDataReader dr = cmd.ExecuteReader();
-            if (dr.Read())
+            if (dr.Read()) //ÖDÜNÇ TABLOSUNDA BU TC Lİ VE BU BARKODLU BİR KAYIT VAR. YANİ BU KİŞİ O KİTABI ÖNCEDEN ÖDÜNÇ ALMIŞ. İADE ETMEK İSTİYOR.
             {
                 int id = dr.GetInt32(0);
                 dr.Close();
@@ -118,8 +118,18 @@ namespace kütüphane
                 if (üye_id == -1)
                 {
                     if (DialogResult.Cancel == MessageBox.Show("Bu üye kayıtlı değil. Üye kayıt sayfasına yönlendiriliyorsunuz.", "Üye eklenmesi gerekli", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return;
-                    button1_Click("ödünç", new EventArgs());
-                    return;
+                    Form2 üye = new Form2();
+                    üye.tc = textBox1.Text.Trim();
+                    DialogResult cevap = üye.ShowDialog();
+                    if (cevap == DialogResult.Cancel)
+                    {
+                        MessageBox.Show("İşlem iptal edildi.", "Üye eklenemedi.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    else
+                    {
+                        üye_id = üye.kayit_id;
+                    }
                 }
 
                 cmd.CommandText = String.Format("select id from kitaplar where barkod='{0}'", textBox2.Text.Trim());
@@ -149,14 +159,14 @@ namespace kütüphane
                     dr.Close();
                     if (ödünçVerilenAdet >= kitapAdeti)
                     {
-                        //hata ver ve çık
+                        //hataver ve çık
                         MessageBox.Show("Bu kitap adetinden fazla ödünç verilemez.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
                 }
                 else dr.Close();
 
-
+                
 
                 cmd.CommandText = String.Format("insert into odunc(uye_id,kitap_id,verilis_tarihi,getirilecek_tarih) values({0},{1},'{2}','{3}')", üye_id, kitap_id, DateTime.Today.ToString("yyyy.MM.dd"), DateTime.Today.AddDays(7).ToString("yyyy.MM.dd"));
                 cmd.ExecuteNonQuery();
@@ -169,7 +179,7 @@ namespace kütüphane
 
         }
 
-        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        private void textBox1_KeyDown(object sender, KeyEventArgs e) //tc kimlik no ENTER a basılınca
         {
             if (e.KeyData == Keys.Enter)
                 if (textBox2.Text.Trim() == "")
@@ -180,7 +190,7 @@ namespace kütüphane
                 else kontrol();
         }
 
-        private void textBox2_KeyDown(object sender, KeyEventArgs e)
+        private void textBox2_KeyDown(object sender, KeyEventArgs e)  //barkod ENTER a basılınca
         {
             if (e.KeyData == Keys.Enter)
                 if (textBox1.Text.Trim() == "")
@@ -191,5 +201,10 @@ namespace kütüphane
                 else kontrol();
 
         }
+        // DahaNasipOlmadı: iade ve ödünç
+        // YAPILACAK: Barkod işlemi yapılacak
+        // DahaNasipOlmadı: şldfkhgşlksdfşlh
+
+        //YAPILACAK: KLJLEFKJSKLŞ
     }
 }
